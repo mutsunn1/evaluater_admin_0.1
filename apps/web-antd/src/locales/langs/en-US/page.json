@@ -16,5 +16,9 @@
     "title": "Users",
     "list": "User List",
     "detail": "User Detail"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "monitor": "Active Sessions"
   }
 }
