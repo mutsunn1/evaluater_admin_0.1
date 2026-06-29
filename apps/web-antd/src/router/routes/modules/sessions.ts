@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         name: 'SessionMonitor',
-        path: 'monitor',
+        path: '/sessions/monitor',
         component: () => import('#/views/sessions/monitor/index.vue'),
         meta: {
           icon: 'lucide:radio',
