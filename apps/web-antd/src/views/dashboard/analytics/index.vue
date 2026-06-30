@@ -24,6 +24,8 @@ const { renderEcharts: renderSkill } = useEcharts(skillChartRef);
 
 const data = ref<DashboardData>({
   avg_hsk_level: 0,
+  avg_response_time_ms: null,
+  avg_session_duration_ms: null,
   hsk_distribution: [],
   native_language_distribution: [],
   new_users_trend: [],
@@ -121,6 +123,27 @@ watch(
         </Card>
       </Col>
       <Col :span="8">
+        <Card :loading="loading" title="平均评测时长">
+          <Statistic
+            :precision="0"
+            :value="data.avg_session_duration_ms || 0"
+            suffix="ms"
+          />
+        </Card>
+      </Col>
+    </Row>
+
+    <Row :gutter="16" class="mt-4">
+      <Col :span="8">
+        <Card :loading="loading" title="平均答题耗时">
+          <Statistic
+            :precision="0"
+            :value="data.avg_response_time_ms || 0"
+            suffix="ms"
+          />
+        </Card>
+      </Col>
+      <Col :span="8">
         <Card :loading="loading" title="HSK 分布">
           <Table
             :columns="columns"
@@ -128,6 +151,11 @@ watch(
             :pagination="false"
             size="small"
           />
+        </Card>
+      </Col>
+      <Col :span="8">
+        <Card :loading="loading" title="技能维度平均分">
+          <EchartsUI ref="skillChartRef" />
         </Card>
       </Col>
     </Row>
@@ -141,14 +169,6 @@ watch(
       <Col :span="12">
         <Card :loading="loading" title="母语分布">
           <EchartsUI ref="languageChartRef" />
-        </Card>
-      </Col>
-    </Row>
-
-    <Row :gutter="16" class="mt-4">
-      <Col :span="24">
-        <Card :loading="loading" title="技能维度平均分">
-          <EchartsUI ref="skillChartRef" />
         </Card>
       </Col>
     </Row>

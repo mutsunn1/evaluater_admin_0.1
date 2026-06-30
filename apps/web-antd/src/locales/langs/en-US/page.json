@@ -15,10 +15,13 @@
   "users": {
     "title": "Users",
     "list": "User List",
-    "detail": "User Detail"
+    "detail": "User Detail",
+    "sessions": "Sessions",
+    "timing": "Timing Stats"
   },
   "sessions": {
     "title": "Sessions",
-    "monitor": "Active Sessions"
+    "monitor": "Active Sessions",
+    "detail": "Session Detail"
   }
 }

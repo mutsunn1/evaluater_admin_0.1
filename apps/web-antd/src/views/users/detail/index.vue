@@ -79,6 +79,18 @@ onMounted(fetchDetail);
       </Descriptions>
     </Card>
 
+    <Card class="mt-4" title="评测记录">
+      <Button type="primary" @click="router.push(`/users/${encodeURIComponent(profile.user_id)}/sessions`)"
+        >查看记录</Button
+      >
+    </Card>
+
+    <Card class="mt-4" title="耗时统计">
+      <Button type="primary" @click="router.push(`/users/${encodeURIComponent(profile.user_id)}/timing`)"
+        >查看统计</Button
+      >
+    </Card>
+
     <Card class="mt-4" title="顽固错误">
       <List
         v-if="profile.stubborn_errors?.length"

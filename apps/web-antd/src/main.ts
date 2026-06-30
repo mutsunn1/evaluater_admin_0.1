@@ -29,4 +29,7 @@ async function initApplication() {
   unmountGlobalLoading();
 }
 
-initApplication();
+initApplication().catch((error) => {
+  console.error('[app-init] failed to initialize application:', error);
+  unmountGlobalLoading();
+});

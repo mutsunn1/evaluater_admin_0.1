@@ -30,6 +30,24 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.users.detail'),
         },
       },
+      {
+        name: 'UserSessions',
+        path: '/users/:user_id/sessions',
+        component: () => import('#/views/users/sessions/index.vue'),
+        meta: {
+          hideInMenu: true,
+          title: $t('page.users.sessions'),
+        },
+      },
+      {
+        name: 'UserTiming',
+        path: '/users/:user_id/timing',
+        component: () => import('#/views/users/timing/index.vue'),
+        meta: {
+          hideInMenu: true,
+          title: $t('page.users.timing'),
+        },
+      },
     ],
   },
 ];

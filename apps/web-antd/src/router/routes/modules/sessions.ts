@@ -21,6 +21,15 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.sessions.monitor'),
         },
       },
+      {
+        name: 'SessionDetail',
+        path: '/sessions/:session_id',
+        component: () => import('#/views/sessions/detail/index.vue'),
+        meta: {
+          hideInMenu: true,
+          title: $t('page.sessions.detail'),
+        },
+      },
     ],
   },
 ];
