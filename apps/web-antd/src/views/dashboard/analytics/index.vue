@@ -1,18 +1,16 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
-
-import {
-  Card,
-  Col,
-  Row,
-  Statistic,
-  Table,
-} from 'ant-design-vue';
 import type { ECOption } from '@vben/plugins/echarts';
 
-import { getDashboardApi } from '#/api';
 import type { DashboardData } from '#/api';
+
+import { computed, onMounted, ref, watch } from 'vue';
+
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+
+import { Card, Col, Row, Statistic, Table } from 'ant-design-vue';
+
+import { getDashboardApi } from '#/api';
+import { formatDuration } from '#/utils/duration';
 
 const trendChartRef = ref<any>(null);
 const languageChartRef = ref<any>(null);
@@ -124,11 +122,9 @@ watch(
       </Col>
       <Col :span="8">
         <Card :loading="loading" title="平均评测时长">
-          <Statistic
-            :precision="0"
-            :value="data.avg_session_duration_ms || 0"
-            suffix="ms"
-          />
+          <div class="text-2xl font-semibold">
+            {{ formatDuration(data.avg_session_duration_ms) }}
+          </div>
         </Card>
       </Col>
     </Row>
@@ -136,11 +132,9 @@ watch(
     <Row :gutter="16" class="mt-4">
       <Col :span="8">
         <Card :loading="loading" title="平均答题耗时">
-          <Statistic
-            :precision="0"
-            :value="data.avg_response_time_ms || 0"
-            suffix="ms"
-          />
+          <div class="text-2xl font-semibold">
+            {{ formatDuration(data.avg_response_time_ms) }}
+          </div>
         </Card>
       </Col>
       <Col :span="8">

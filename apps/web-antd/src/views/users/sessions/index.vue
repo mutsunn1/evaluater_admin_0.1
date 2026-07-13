@@ -1,15 +1,13 @@
 <script lang="ts" setup>
+import type { UserSessionsResult } from '#/api';
+
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import {
-  Button,
-  Card,
-  Table,
-} from 'ant-design-vue';
+import { Button, Card, Table } from 'ant-design-vue';
 
 import { getUserSessionsApi } from '#/api';
-import type { UserSessionsResult } from '#/api';
+import { formatDuration } from '#/utils/duration';
 
 const route = useRoute();
 const router = useRouter();
@@ -44,12 +42,11 @@ const pagination = computed(() => ({
   total: data.value.total,
 }));
 
-function formatMs(value: number | null) {
-  if (value === null || value === undefined) return '-';
-  return `${value} ms`;
+function formatMs(value: null | number) {
+  return formatDuration(value);
 }
 
-function formatTimestamp(value: number | null) {
+function formatTimestamp(value: null | number) {
   if (!value) return '-';
   return new Date(value).toLocaleString();
 }
@@ -57,7 +54,10 @@ function formatTimestamp(value: number | null) {
 async function fetchSessions(page: number = 1) {
   loading.value = true;
   try {
-    data.value = await getUserSessionsApi(userId.value, { page, page_size: data.value.page_size });
+    data.value = await getUserSessionsApi(userId.value, {
+      page,
+      page_size: data.value.page_size,
+    });
   } finally {
     loading.value = false;
   }
@@ -94,10 +94,20 @@ onMounted(() => fetchSessions());
         <template v-if="column.key === 'action'">
           <Button type="link" @click="goDetail(record.session_id)">详情</Button>
         </template>
-        <template v-else-if="['started_at', 'ended_at'].includes(String(column.dataIndex))">
+        <template
+          v-else-if="
+            ['started_at', 'ended_at'].includes(String(column.dataIndex))
+          "
+        >
           {{ formatTimestamp(record[String(column.dataIndex)]) }}
         </template>
-        <template v-else-if="['duration_ms', 'total_response_time_ms'].includes(String(column.dataIndex))">
+        <template
+          v-else-if="
+            ['duration_ms', 'total_response_time_ms'].includes(
+              String(column.dataIndex),
+            )
+          "
+        >
           {{ formatMs(record[String(column.dataIndex)]) }}
         </template>
         <template v-else-if="column.dataIndex === 'final_hsk_level'">

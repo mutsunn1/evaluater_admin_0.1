@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { SessionDetail } from '#/api';
+
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -12,20 +14,22 @@ import {
 } from 'ant-design-vue';
 
 import { getSessionDetailApi } from '#/api';
-import type { SessionDetail } from '#/api';
+import { formatDuration } from '#/utils/duration';
 
 const route = useRoute();
 const router = useRouter();
-const data = ref<SessionDetail | null>(null);
+const data = ref<null | SessionDetail>(null);
 const loading = ref(false);
 
-const sessionId = computed(() => decodeURIComponent(String(route.params.session_id)));
+const sessionId = computed(() =>
+  decodeURIComponent(String(route.params.session_id)),
+);
 
 const questionColumns = [
   { dataIndex: 'item_id', title: '题号' },
   { dataIndex: 'question_type', title: '题型' },
   { dataIndex: 'skill_dimension', title: '技能维度' },
-  { dataIndex: 'response_time_ms', title: '答题耗时 (ms)' },
+  { dataIndex: 'response_time_ms', title: '答题耗时' },
   { dataIndex: 'is_correct', title: '是否正确' },
   { dataIndex: 'score', title: '得分' },
 ];
@@ -33,7 +37,7 @@ const questionColumns = [
 const roundColumns = [
   { dataIndex: 'round_index', title: '轮次' },
   { dataIndex: 'question_count', title: '题目数' },
-  { dataIndex: 'avg_response_time_ms', title: '平均耗时 (ms)' },
+  { dataIndex: 'avg_response_time_ms', title: '平均耗时' },
   { dataIndex: 'correct_count', title: '正确数' },
 ];
 
@@ -43,12 +47,11 @@ const accuracyRate = computed(() => {
   return Math.round((correct / data.value.question_count) * 100);
 });
 
-function formatMs(value: number | null) {
-  if (value === null || value === undefined) return '-';
-  return `${value} ms`;
+function formatMs(value: null | number) {
+  return formatDuration(value);
 }
 
-function formatTimestamp(value: number | null) {
+function formatTimestamp(value: null | number) {
   if (!value) return '-';
   return new Date(value).toLocaleString();
 }
@@ -69,43 +72,74 @@ function goBack() {
 onMounted(fetchDetail);
 </script>
 
+<script lang="ts">
+import { Col, Row } from 'ant-design-vue';
+export default {
+  components: { ACol: Col, ARow: Row },
+};
+</script>
+
 <template>
   <div v-if="data" class="p-5">
     <Button class="mb-4" @click="goBack">返回</Button>
 
     <Card :loading="loading" title="会话概览">
       <Descriptions bordered :column="2">
-        <Descriptions.Item label="会话 ID">{{ data.session_id }}</Descriptions.Item>
-        <Descriptions.Item label="用户 ID">{{ data.user_id }}</Descriptions.Item>
-        <Descriptions.Item label="开始时间">{{ formatTimestamp(data.started_at) }}</Descriptions.Item>
-        <Descriptions.Item label="结束时间">{{ formatTimestamp(data.ended_at) }}</Descriptions.Item>
-        <Descriptions.Item label="总时长">{{ formatMs(data.duration_ms) }}</Descriptions.Item>
-        <Descriptions.Item label="答题总耗时">{{ formatMs(data.total_response_time_ms) }}</Descriptions.Item>
-        <Descriptions.Item label="题目数">{{ data.question_count }}</Descriptions.Item>
+        <Descriptions.Item label="会话 ID">
+          {{ data.session_id }}
+        </Descriptions.Item>
+        <Descriptions.Item label="用户 ID">
+          {{ data.user_id }}
+        </Descriptions.Item>
+        <Descriptions.Item label="开始时间">
+          {{ formatTimestamp(data.started_at) }}
+        </Descriptions.Item>
+        <Descriptions.Item label="结束时间">
+          {{ formatTimestamp(data.ended_at) }}
+        </Descriptions.Item>
+        <Descriptions.Item label="总时长">
+          {{ formatMs(data.duration_ms) }}
+        </Descriptions.Item>
+        <Descriptions.Item label="答题总耗时">
+          {{ formatMs(data.total_response_time_ms) }}
+        </Descriptions.Item>
+        <Descriptions.Item label="题目数">
+          {{ data.question_count }}
+        </Descriptions.Item>
         <Descriptions.Item label="最终 HSK">
-          <Tag v-if="data.final_hsk_level" color="blue">HSK {{ data.final_hsk_level }}</Tag>
+          <Tag v-if="data.final_hsk_level" color="blue">
+            HSK {{ data.final_hsk_level }}
+          </Tag>
           <span v-else class="text-gray-400">未知</span>
         </Descriptions.Item>
       </Descriptions>
     </Card>
 
-    <Row :gutter="16" class="mt-4">
-      <Col :span="8">
+    <ARow :gutter="16" class="mt-4">
+      <ACol :span="8">
         <Card :loading="loading" title="正确率">
           <Statistic :value="accuracyRate" suffix="%" />
         </Card>
-      </Col>
-      <Col :span="8">
+      </ACol>
+      <ACol :span="8">
         <Card :loading="loading" title="平均答题耗时">
-          <Statistic :value="(data.total_response_time_ms || 0) / (data.question_count || 1)" suffix="ms" />
+          <div class="text-2xl font-semibold">
+            {{
+              formatDuration(
+                data.total_response_time_ms && data.question_count
+                  ? data.total_response_time_ms / data.question_count
+                  : null,
+              )
+            }}
+          </div>
         </Card>
-      </Col>
-      <Col :span="8">
+      </ACol>
+      <ACol :span="8">
         <Card :loading="loading" title="总轮次">
           <Statistic :value="data.round_summaries.length" />
         </Card>
-      </Col>
-    </Row>
+      </ACol>
+    </ARow>
 
     <Card class="mt-4" :loading="loading" title="每轮统计">
       <Table
@@ -137,10 +171,3 @@ onMounted(fetchDetail);
     </Card>
   </div>
 </template>
-
-<script lang="ts">
-import { Col, Row } from 'ant-design-vue';
-export default {
-  components: { Col, Row },
-};
-</script>

@@ -1,22 +1,17 @@
 <script lang="ts" setup>
+import type { UserTimingStats } from '#/api';
+
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import {
-  Button,
-  Card,
-  Col,
-  Row,
-  Select,
-  Table,
-} from 'ant-design-vue';
+import { Button, Card, Col, Row, Select, Table } from 'ant-design-vue';
 
 import { getUserTimingStatsApi } from '#/api';
-import type { UserTimingStats } from '#/api';
+import { formatDuration } from '#/utils/duration';
 
 const route = useRoute();
 const router = useRouter();
-const data = ref<UserTimingStats | null>(null);
+const data = ref<null | UserTimingStats>(null);
 const loading = ref(false);
 const days = ref(30);
 
@@ -25,14 +20,14 @@ const userId = computed(() => decodeURIComponent(String(route.params.user_id)));
 const typeColumns = [
   { dataIndex: 'question_type', title: '题型' },
   { dataIndex: 'count', title: '答题数' },
-  { dataIndex: 'avg_response_time_ms', title: '平均耗时 (ms)' },
+  { dataIndex: 'avg_response_time_ms', title: '平均耗时' },
   { dataIndex: 'accuracy_rate', title: '正确率 (%)' },
 ];
 
 const dimensionColumns = [
   { dataIndex: 'skill_dimension', title: '技能维度' },
   { dataIndex: 'count', title: '答题数' },
-  { dataIndex: 'avg_response_time_ms', title: '平均耗时 (ms)' },
+  { dataIndex: 'avg_response_time_ms', title: '平均耗时' },
   { dataIndex: 'accuracy_rate', title: '正确率 (%)' },
 ];
 
@@ -42,9 +37,8 @@ const dayOptions = [
   { label: '近 90 天', value: 90 },
 ];
 
-function formatMs(value: number | null) {
-  if (value === null || value === undefined) return '-';
-  return `${value} ms`;
+function formatMs(value: null | number) {
+  return formatDuration(value);
 }
 
 async function fetchStats() {
