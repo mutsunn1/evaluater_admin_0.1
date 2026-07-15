@@ -23,5 +23,10 @@
     "title": "会话监控",
     "monitor": "活跃会话",
     "detail": "会话详情"
+  },
+  "questionBank": {
+    "title": "题库样本",
+    "list": "样本列表",
+    "upload": "批量上传"
   }
 }

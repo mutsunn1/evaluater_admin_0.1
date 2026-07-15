@@ -1,5 +1,6 @@
 export * from './admin-auth';
 export * from './admin-dashboard';
+export * from './admin-question-bank';
 export * from './admin-session-detail';
 export * from './admin-sessions';
 export * from './admin-user-sessions';

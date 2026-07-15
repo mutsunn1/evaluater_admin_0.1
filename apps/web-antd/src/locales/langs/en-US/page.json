@@ -23,5 +23,10 @@
     "title": "Sessions",
     "monitor": "Active Sessions",
     "detail": "Session Detail"
+  },
+  "questionBank": {
+    "title": "Question Bank",
+    "list": "Sample List",
+    "upload": "Batch Upload"
   }
 }
