@@ -32,6 +32,7 @@
   "forge": {
     "title": "Question Forge",
     "console": "Production Console",
-    "review": "Review Workbench"
+    "review": "Review Workbench",
+    "metrics": "Quality Dashboard"
   }
 }

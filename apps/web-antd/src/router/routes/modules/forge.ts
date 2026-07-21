@@ -30,6 +30,15 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.forge.review'),
         },
       },
+      {
+        name: 'ForgeMetrics',
+        path: '/forge/metrics',
+        component: () => import('#/views/forge/metrics.vue'),
+        meta: {
+          icon: 'lucide:gauge',
+          title: $t('page.forge.metrics'),
+        },
+      },
     ],
   },
 ];

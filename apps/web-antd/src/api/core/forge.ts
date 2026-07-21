@@ -111,6 +111,58 @@ export interface EditForgeReviewItemParams {
   explanation: string;
 }
 
+export interface ForgeMetricsGate {
+  passed: number;
+  failed: number;
+  /** Ratio in [0, 1] as produced by the server. */
+  pass_rate: number;
+}
+
+export interface ForgeMetricsGates {
+  deterministic: ForgeMetricsGate;
+  fence: ForgeMetricsGate;
+  critique: ForgeMetricsGate;
+  dedup: ForgeMetricsGate;
+  tts: ForgeMetricsGate;
+}
+
+export interface ForgeCritiqueAvg {
+  naturalness: number;
+  answer_uniqueness: number;
+  distractor_quality: number;
+  difficulty_fit: number;
+}
+
+export interface ForgeMetricsSummary {
+  gates: ForgeMetricsGates;
+  critique_avg: ForgeCritiqueAvg;
+  failure_reasons: Array<{ count: number; reason: string }>;
+  by_category: Array<{ failed: number; items: number; slug: string }>;
+}
+
+export interface ForgeRecentItem {
+  id: string;
+  level: string;
+  skill: string;
+  question_type: string;
+  stem: string;
+  source_file: string;
+}
+
+export interface ForgeRecentItemsResult {
+  items: ForgeRecentItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ForgeCostMetrics {
+  by_run: Array<{ cost: number; run_id: string; tokens: number }>;
+  by_day: Array<{ cost: number; date: string; tokens: number }>;
+  total_tokens: number;
+  total_cost: number;
+}
+
 /**
  * Probe the forge service health endpoint. Unauthenticated; the dedicated
  * health client applies a 3s timeout so offline detection is fast.
@@ -220,4 +272,22 @@ export async function getForgeAudioApi(filename: string): Promise<Blob> {
     `/api/v1/audio/${encodeURIComponent(filename)}`,
     { responseType: 'blob' },
   );
+}
+
+/** Aggregated quality-gate metrics for the dashboard. */
+export async function getForgeMetricsSummaryApi(): Promise<ForgeMetricsSummary> {
+  return forgeRequestClient.get('/api/v1/metrics/summary');
+}
+
+/** Recently produced items, paginated server-side. */
+export async function getForgeRecentItemsApi(params: {
+  page: number;
+  page_size: number;
+}): Promise<ForgeRecentItemsResult> {
+  return forgeRequestClient.get('/api/v1/metrics/recent-items', { params });
+}
+
+/** Token/cost usage aggregated by run and by day. */
+export async function getForgeCostMetricsApi(): Promise<ForgeCostMetrics> {
+  return forgeRequestClient.get('/api/v1/metrics/cost');
 }

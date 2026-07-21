@@ -283,3 +283,76 @@ describe('forge review api', () => {
     expect(result).toBeInstanceOf(Blob);
   });
 });
+
+describe('forge metrics api', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('fetches the metrics summary', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      gates: {
+        deterministic: { passed: 90, failed: 10, pass_rate: 0.9 },
+        fence: { passed: 95, failed: 5, pass_rate: 0.95 },
+        critique: { passed: 80, failed: 20, pass_rate: 0.8 },
+        dedup: { passed: 99, failed: 1, pass_rate: 0.99 },
+        tts: { passed: 100, failed: 0, pass_rate: 1 },
+      },
+      critique_avg: {
+        naturalness: 4.1,
+        answer_uniqueness: 4.5,
+        distractor_quality: 3.9,
+        difficulty_fit: 4.2,
+      },
+      failure_reasons: [{ reason: '答案不唯一', count: 12 }],
+      by_category: [{ slug: 'hsk4:reading:mc', items: 100, failed: 10 }],
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeMetricsSummaryApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/metrics/summary');
+    expect(result.gates.deterministic.pass_rate).toBe(0.9);
+    expect(result.by_category).toHaveLength(1);
+  });
+
+  it('fetches recent items with pagination params', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      items: [
+        {
+          id: 'q1',
+          level: 'HSK4',
+          skill: 'reading',
+          question_type: 'multiple_choice',
+          stem: '题干',
+          source_file: 'out.jsonl',
+        },
+      ],
+      total: 21,
+      page: 2,
+      page_size: 10,
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeRecentItemsApi: api } = await import('./forge');
+    const result = await api({ page: 2, page_size: 10 });
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/metrics/recent-items', {
+      params: { page: 2, page_size: 10 },
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.total).toBe(21);
+  });
+
+  it('fetches cost metrics', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      by_run: [{ run_id: 'run-1', tokens: 1200, cost: 0.0123 }],
+      by_day: [{ date: '2026-07-20', tokens: 5000, cost: 0.05 }],
+      total_tokens: 6200,
+      total_cost: 0.0623,
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeCostMetricsApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/metrics/cost');
+    expect(result.by_day).toHaveLength(1);
+    expect(result.total_cost).toBeCloseTo(0.0623);
+  });
+});

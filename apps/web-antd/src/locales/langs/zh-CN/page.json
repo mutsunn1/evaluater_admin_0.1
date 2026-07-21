@@ -32,6 +32,7 @@
   "forge": {
     "title": "题目生成",
     "console": "生产控制台",
-    "review": "人审工作台"
+    "review": "人审工作台",
+    "metrics": "质量仪表盘"
   }
 }
