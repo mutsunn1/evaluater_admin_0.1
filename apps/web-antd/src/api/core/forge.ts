@@ -190,6 +190,59 @@ export interface ForgeBatchRollbackResult {
   missing: number;
 }
 
+export interface ForgeDatasourceRecords {
+  chars?: null | number;
+  grammar?: null | number;
+  vocab?: null | number;
+}
+
+export interface ForgeDatasource {
+  name: string;
+  license: string;
+  records: ForgeDatasourceRecords;
+  cleaned_at: null | string;
+  source_repo: string;
+  status: string;
+}
+
+export interface ForgeDatasourcesResult {
+  datasources: ForgeDatasource[];
+  blacklist_count: number;
+}
+
+export interface ForgeDatasourceRefreshResult {
+  name: string;
+  /** Total registered records before and after the cleaning script runs. */
+  before: number;
+  after: number;
+  diff: { added: number; removed: number };
+  ok: boolean;
+  error?: string;
+}
+
+export interface ForgeVocabItem {
+  word: string;
+  pinyin: string;
+  pos: string;
+  level_hsk20: number | string;
+  level_hsk30: number | string;
+  en: string;
+  source: string;
+}
+
+export interface ForgeVocabListResult {
+  items: ForgeVocabItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ForgeBlacklistResult {
+  /** Content hashes currently on the blacklist. */
+  items: string[];
+  total: number;
+}
+
 /**
  * Probe the forge service health endpoint. Unauthenticated; the dedicated
  * health client applies a 3s timeout so offline detection is fast.
@@ -344,5 +397,44 @@ export async function rollbackForgeBatchApi(
 ): Promise<ForgeBatchRollbackResult> {
   return forgeRequestClient.post(
     `/api/v1/batches/${encodeURIComponent(batchId)}/rollback`,
+  );
+}
+
+/** List datasources with record counts, plus the global blacklist size. */
+export async function getForgeDatasourcesApi(): Promise<ForgeDatasourcesResult> {
+  return forgeRequestClient.get('/api/v1/datasources');
+}
+
+/** Re-run one datasource's cleaning script against its local raw checkout. */
+export async function refreshForgeDatasourceApi(
+  name: string,
+): Promise<ForgeDatasourceRefreshResult> {
+  const pathName = name.replaceAll('/', '~');
+  return forgeRequestClient.post(
+    `/api/v1/datasources/${encodeURIComponent(pathName)}/refresh`,
+  );
+}
+
+/** Browse the vocabulary constraint library with optional level/keyword filters. */
+export async function getForgeVocabApi(params: {
+  level?: number | string;
+  page: number;
+  page_size: number;
+  q?: string;
+}): Promise<ForgeVocabListResult> {
+  return forgeRequestClient.get('/api/v1/datasources/vocab', { params });
+}
+
+/** List blacklisted content hashes. */
+export async function getForgeBlacklistApi(): Promise<ForgeBlacklistResult> {
+  return forgeRequestClient.get('/api/v1/blacklist');
+}
+
+/** Remove one hash from the blacklist. */
+export async function removeForgeBlacklistItemApi(
+  hash: string,
+): Promise<{ removed: boolean }> {
+  return forgeRequestClient.delete(
+    `/api/v1/blacklist/${encodeURIComponent(hash)}`,
   );
 }

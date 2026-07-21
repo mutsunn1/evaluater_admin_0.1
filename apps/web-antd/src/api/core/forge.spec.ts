@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 function mockRequestModule(
   healthGet: ReturnType<typeof vi.fn>,
   overrides?: {
+    delete?: ReturnType<typeof vi.fn>;
     get?: ReturnType<typeof vi.fn>;
     post?: ReturnType<typeof vi.fn>;
   },
@@ -10,6 +11,7 @@ function mockRequestModule(
   vi.doMock('#/api/request', () => ({
     forgeHealthClient: { get: healthGet },
     forgeRequestClient: {
+      delete: overrides?.delete ?? vi.fn(),
       get: overrides?.get ?? vi.fn(),
       post: overrides?.post ?? vi.fn(),
     },
@@ -424,5 +426,99 @@ describe('forge batches api', () => {
     expect(mockPost).toHaveBeenCalledWith('/api/v1/batches/b1/rollback');
     expect(result.deleted).toBe(118);
     expect(result.missing).toBe(2);
+  });
+});
+
+describe('forge datasources api', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('lists datasources with the blacklist count', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      datasources: [
+        {
+          name: 'hsk30',
+          license: 'MIT',
+          records: { vocab: 12_000, grammar: 500 },
+          cleaned_at: '2026-07-20T00:00:00Z',
+          source_repo: 'https://github.com/example/hsk30',
+          status: 'ok',
+        },
+      ],
+      blacklist_count: 7,
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeDatasourcesApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/datasources');
+    expect(result.datasources).toHaveLength(1);
+    expect(result.blacklist_count).toBe(7);
+  });
+
+  it('refreshes a datasource with slash-safe name', async () => {
+    const mockPost = vi.fn().mockResolvedValue({
+      name: 'ivankra/hsk30',
+      before: 11_000,
+      after: 12_000,
+      diff: { added: 1200, removed: 200 },
+      ok: true,
+    });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { refreshForgeDatasourceApi: api } = await import('./forge');
+    const result = await api('ivankra/hsk30');
+    expect(mockPost).toHaveBeenCalledWith(
+      '/api/v1/datasources/ivankra~hsk30/refresh',
+    );
+    expect(result.ok).toBe(true);
+    expect(result.after).toBe(12_000);
+    expect(result.diff.added).toBe(1200);
+  });
+
+  it('browses vocab with filters and pagination params', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      items: [
+        {
+          word: '苹果',
+          pinyin: 'píngguǒ',
+          pos: 'n',
+          level_hsk20: 2,
+          level_hsk30: 1,
+          en: 'apple',
+          source: 'hsk30',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeVocabApi: api } = await import('./forge');
+    const result = await api({ level: 2, q: '苹果', page: 1, page_size: 20 });
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/datasources/vocab', {
+      params: { level: 2, q: '苹果', page: 1, page_size: 20 },
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.level_hsk30).toBe(1);
+  });
+
+  it('lists blacklist hashes', async () => {
+    const mockGet = vi
+      .fn()
+      .mockResolvedValue({ items: ['abc123', 'def456'], total: 2 });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeBlacklistApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/blacklist');
+    expect(result.items).toEqual(['abc123', 'def456']);
+  });
+
+  it('removes a blacklist hash with encoded id', async () => {
+    const mockDelete = vi.fn().mockResolvedValue({ removed: true });
+    mockRequestModule(vi.fn(), { delete: mockDelete });
+    const { removeForgeBlacklistItemApi: api } = await import('./forge');
+    const result = await api('ab/c');
+    expect(mockDelete).toHaveBeenCalledWith('/api/v1/blacklist/ab%2Fc');
+    expect(result.removed).toBe(true);
   });
 });

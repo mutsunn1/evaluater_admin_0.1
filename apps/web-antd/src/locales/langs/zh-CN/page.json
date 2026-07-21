@@ -34,6 +34,7 @@
     "console": "生产控制台",
     "review": "人审工作台",
     "metrics": "质量仪表盘",
-    "batches": "批次管理"
+    "batches": "批次管理",
+    "datasources": "数据源"
   }
 }

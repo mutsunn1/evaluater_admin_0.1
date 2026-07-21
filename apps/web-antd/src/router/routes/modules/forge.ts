@@ -48,6 +48,15 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.forge.batches'),
         },
       },
+      {
+        name: 'ForgeDatasources',
+        path: '/forge/datasources',
+        component: () => import('#/views/forge/datasources.vue'),
+        meta: {
+          icon: 'lucide:database',
+          title: $t('page.forge.datasources'),
+        },
+      },
     ],
   },
 ];

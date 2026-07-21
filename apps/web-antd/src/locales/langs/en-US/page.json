@@ -34,6 +34,7 @@
     "console": "Production Console",
     "review": "Review Workbench",
     "metrics": "Quality Dashboard",
-    "batches": "Batch Import"
+    "batches": "Batch Import",
+    "datasources": "Data Sources"
   }
 }
