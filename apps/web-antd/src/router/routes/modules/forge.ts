@@ -39,6 +39,15 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.forge.metrics'),
         },
       },
+      {
+        name: 'ForgeBatches',
+        path: '/forge/batches',
+        component: () => import('#/views/forge/batches.vue'),
+        meta: {
+          icon: 'lucide:package',
+          title: $t('page.forge.batches'),
+        },
+      },
     ],
   },
 ];

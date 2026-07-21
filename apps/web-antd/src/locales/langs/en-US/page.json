@@ -33,6 +33,7 @@
     "title": "Question Forge",
     "console": "Production Console",
     "review": "Review Workbench",
-    "metrics": "Quality Dashboard"
+    "metrics": "Quality Dashboard",
+    "batches": "Batch Import"
   }
 }

@@ -356,3 +356,73 @@ describe('forge metrics api', () => {
     expect(result.total_cost).toBeCloseTo(0.0623);
   });
 });
+
+describe('forge batches api', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('lists batches with import status', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      batches: [
+        {
+          batch_id: 'b1',
+          file: 'out/production/b1.jsonl',
+          items: 120,
+          categories: [{ slug: 'hsk4:reading:mc', count: 120 }],
+          imported: {
+            at: '2026-07-21T00:00:00Z',
+            task_id: 'task-1',
+            processed: 118,
+            failed_count: 2,
+          },
+          blacklisted_count: 3,
+        },
+        {
+          batch_id: 'b2',
+          file: 'out/production/b2.jsonl',
+          items: 80,
+          categories: [],
+          imported: null,
+          blacklisted_count: 0,
+        },
+      ],
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeBatchesApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/batches');
+    expect(result.batches).toHaveLength(2);
+    expect(result.batches[0]?.imported?.processed).toBe(118);
+    expect(result.batches[1]?.imported).toBeNull();
+  });
+
+  it('imports a batch with encoded id', async () => {
+    const mockPost = vi.fn().mockResolvedValue({
+      batch_id: 'b 1',
+      imported: {
+        at: '2026-07-21T01:00:00Z',
+        task_id: 'task-9',
+        processed: 120,
+        failed_count: 0,
+      },
+    });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { importForgeBatchApi: api } = await import('./forge');
+    const result = await api('b 1');
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/batches/b%201/import');
+    expect(result.imported.processed).toBe(120);
+  });
+
+  it('rolls back a batch', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ batch_id: 'b1', deleted: 118, missing: 2 });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { rollbackForgeBatchApi: api } = await import('./forge');
+    const result = await api('b1');
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/batches/b1/rollback');
+    expect(result.deleted).toBe(118);
+    expect(result.missing).toBe(2);
+  });
+});

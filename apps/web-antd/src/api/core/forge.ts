@@ -163,6 +163,33 @@ export interface ForgeCostMetrics {
   total_cost: number;
 }
 
+export interface ForgeBatchCategory {
+  slug: string;
+  count: number;
+}
+
+export interface ForgeBatchImportInfo {
+  at: string;
+  task_id: string;
+  processed: number;
+  failed_count: number;
+}
+
+export interface ForgeBatch {
+  batch_id: string;
+  file: string;
+  items: number;
+  categories: ForgeBatchCategory[];
+  imported: ForgeBatchImportInfo | null;
+  blacklisted_count: number;
+}
+
+export interface ForgeBatchRollbackResult {
+  batch_id: string;
+  deleted: number;
+  missing: number;
+}
+
 /**
  * Probe the forge service health endpoint. Unauthenticated; the dedicated
  * health client applies a 3s timeout so offline detection is fast.
@@ -290,4 +317,32 @@ export async function getForgeRecentItemsApi(params: {
 /** Token/cost usage aggregated by run and by day. */
 export async function getForgeCostMetricsApi(): Promise<ForgeCostMetrics> {
   return forgeRequestClient.get('/api/v1/metrics/cost');
+}
+
+/** List produced batches with their import status. */
+export async function getForgeBatchesApi(): Promise<{
+  batches: ForgeBatch[];
+}> {
+  return forgeRequestClient.get('/api/v1/batches');
+}
+
+/**
+ * Import a batch into the evaluation system's question bank. The server
+ * answers 502 with a reason when the import fails.
+ */
+export async function importForgeBatchApi(
+  batchId: string,
+): Promise<{ batch_id: string; imported: ForgeBatchImportInfo }> {
+  return forgeRequestClient.post(
+    `/api/v1/batches/${encodeURIComponent(batchId)}/import`,
+  );
+}
+
+/** Remove a previously imported batch from the question bank. */
+export async function rollbackForgeBatchApi(
+  batchId: string,
+): Promise<ForgeBatchRollbackResult> {
+  return forgeRequestClient.post(
+    `/api/v1/batches/${encodeURIComponent(batchId)}/rollback`,
+  );
 }
