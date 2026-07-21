@@ -31,6 +31,7 @@
   },
   "forge": {
     "title": "题目生成",
-    "console": "生产控制台"
+    "console": "生产控制台",
+    "review": "人审工作台"
   }
 }

@@ -21,6 +21,15 @@ const routes: RouteRecordRaw[] = [
           title: $t('page.forge.console'),
         },
       },
+      {
+        name: 'ForgeReview',
+        path: '/forge/review',
+        component: () => import('#/views/forge/review.vue'),
+        meta: {
+          icon: 'lucide:clipboard-check',
+          title: $t('page.forge.review'),
+        },
+      },
     ],
   },
 ];

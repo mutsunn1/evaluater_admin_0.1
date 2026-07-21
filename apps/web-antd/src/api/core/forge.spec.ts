@@ -131,3 +131,155 @@ describe('forge api', () => {
     expect(result.status).toBe('stopping');
   });
 });
+
+describe('forge review api', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('creates a review session with rate and seed', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ session_id: 'rs-1', total: 42 });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { createForgeReviewSessionApi: api } = await import('./forge');
+    const result = await api({ rate: 0.05, seed: 7 });
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/review/sessions', {
+      rate: 0.05,
+      seed: 7,
+    });
+    expect(result.session_id).toBe('rs-1');
+    expect(result.total).toBe(42);
+  });
+
+  it('creates a review session with explicit sources', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ session_id: 'rs-2', total: 5 });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { createForgeReviewSessionApi: api } = await import('./forge');
+    await api({ sources: ['a.jsonl', 'b.jsonl'], rate: 0.1 });
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/review/sessions', {
+      sources: ['a.jsonl', 'b.jsonl'],
+      rate: 0.1,
+    });
+  });
+
+  it('lists review sessions', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      sessions: [
+        {
+          session_id: 'rs-1',
+          created_at: '2026-07-21T00:00:00Z',
+          total: 42,
+          reviewed: 10,
+          status: 'open',
+        },
+      ],
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeReviewSessionsApi: api } = await import('./forge');
+    const result = await api();
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/review/sessions');
+    expect(result.sessions).toHaveLength(1);
+  });
+
+  it('fetches review session detail with encoded id', async () => {
+    const mockGet = vi.fn().mockResolvedValue({
+      session_id: 'rs 1',
+      items: [
+        {
+          content_hash: 'h1',
+          id: 'q1',
+          level: 'HSK4',
+          skill: 'reading',
+          question_type: 'multiple_choice',
+          stem: '题干',
+          options: ['甲', '乙'],
+          answer: 'A',
+          explanation: '解析',
+          media: { audio: 'a.mp3', transcript: '文本' },
+          source_file: 'out.jsonl',
+          status: 'pending',
+        },
+      ],
+      progress: { total: 1, reviewed: 0 },
+    });
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeReviewSessionApi: api } = await import('./forge');
+    const result = await api('rs 1');
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/review/sessions/rs%201');
+    expect(result.items).toHaveLength(1);
+    expect(result.progress.total).toBe(1);
+  });
+
+  it('passes a review item', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ content_hash: 'h1', status: 'passed' });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { passForgeReviewItemApi: api } = await import('./forge');
+    const result = await api('h1', 'rs-1');
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/review/items/h1/pass', {
+      session_id: 'rs-1',
+    });
+    expect(result.status).toBe('passed');
+  });
+
+  it('rejects a review item with a reason', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ content_hash: 'h1', status: 'rejected' });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { rejectForgeReviewItemApi: api } = await import('./forge');
+    await api('h1', 'rs-1', '答案错误');
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/review/items/h1/reject', {
+      reason: '答案错误',
+      session_id: 'rs-1',
+    });
+  });
+
+  it('rejects a review item without a reason', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ content_hash: 'h1', status: 'rejected' });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { rejectForgeReviewItemApi: api } = await import('./forge');
+    await api('h1', 'rs-1');
+    expect(mockPost).toHaveBeenCalledWith('/api/v1/review/items/h1/reject', {
+      session_id: 'rs-1',
+    });
+  });
+
+  it('edits a review item with the four editable fields', async () => {
+    const mockPost = vi
+      .fn()
+      .mockResolvedValue({ content_hash: 'h1', status: 'edited' });
+    mockRequestModule(vi.fn(), { post: mockPost });
+    const { editForgeReviewItemApi: api } = await import('./forge');
+    const params = {
+      session_id: 'rs-1',
+      stem: '新题干',
+      options: ['甲', '乙', '丙'],
+      answer: 'B',
+      explanation: '新解析',
+    };
+    const result = await api('h1', params);
+    expect(mockPost).toHaveBeenCalledWith(
+      '/api/v1/review/items/h1/edit',
+      params,
+    );
+    expect(result.status).toBe('edited');
+  });
+
+  it('downloads audio as a blob', async () => {
+    const mockGet = vi.fn().mockResolvedValue(new Blob(['audio']));
+    mockRequestModule(vi.fn(), { get: mockGet });
+    const { getForgeAudioApi: api } = await import('./forge');
+    const result = await api('a b.mp3');
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/audio/a%20b.mp3', {
+      responseType: 'blob',
+    });
+    expect(result).toBeInstanceOf(Blob);
+  });
+});
