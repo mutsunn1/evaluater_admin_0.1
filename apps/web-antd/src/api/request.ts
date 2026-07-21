@@ -19,6 +19,14 @@ import { useAuthStore } from '#/store';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
+/**
+ * Base URL of the question-forge service; it runs independently from the
+ * admin backend, so it gets its own clients.
+ */
+const forgeURL =
+  (import.meta.env.VITE_FORGE_URL as string | undefined) ||
+  'http://localhost:8100';
+
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
@@ -118,4 +126,21 @@ export const baseRequestClient = new RequestClient({ baseURL: apiURL });
 
 export const adminRequestClient = createRequestClient(apiURL, {
   responseReturn: 'body',
+});
+
+/**
+ * Forge service client. Shares the admin request pipeline, so the admin
+ * Bearer token is injected automatically and 401s trigger re-authentication.
+ */
+export const forgeRequestClient = createRequestClient(forgeURL, {
+  responseReturn: 'body',
+});
+
+/**
+ * Bare forge client for the unauthenticated health probe: no token
+ * interceptors and a short timeout so offline detection stays fast.
+ */
+export const forgeHealthClient = new RequestClient({
+  baseURL: forgeURL,
+  timeout: 3000,
 });

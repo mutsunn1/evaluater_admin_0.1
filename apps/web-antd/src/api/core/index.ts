@@ -7,5 +7,6 @@ export * from './admin-user-sessions';
 export * from './admin-user-timing-stats';
 export * from './admin-users';
 export * from './auth';
+export * from './forge';
 export * from './menu';
 export * from './user';

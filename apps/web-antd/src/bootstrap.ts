@@ -10,6 +10,7 @@ import '@vben/styles/antd';
 import { useTitle } from '@vueuse/core';
 
 import { $t, setupI18n } from '#/locales';
+import { useForgeStore } from '#/store/forge';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
@@ -71,6 +72,9 @@ async function bootstrap(namespace: string) {
   });
 
   app.mount('#app');
+
+  // Poll the question-forge health endpoint; drives forge menu visibility.
+  useForgeStore().startHealthPolling();
 }
 
 export { bootstrap };

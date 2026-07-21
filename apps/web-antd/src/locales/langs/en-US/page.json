@@ -28,5 +28,9 @@
     "title": "Question Bank",
     "list": "Sample List",
     "upload": "Batch Upload"
+  },
+  "forge": {
+    "title": "Question Forge",
+    "console": "Production Console"
   }
 }
